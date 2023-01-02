@@ -8,7 +8,6 @@ from transformers import set_seed
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from transformers import pipeline
 
-
 MODEL_NAME = "Gustavosta/MagicPrompt-Stable-Diffusion"
 MAX_SEED = 2 ** 32 - 1
 

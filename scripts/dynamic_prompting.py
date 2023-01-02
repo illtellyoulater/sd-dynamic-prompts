@@ -16,13 +16,23 @@ from prompts.uicreation import UiCreation
 from prompts.generators import (
     RandomPromptGenerator,
     CombinatorialPromptGenerator,
-    MagicPromptGenerator,
     BatchedCombinatorialPromptGenerator,
     PromptGenerator,
     FeelingLuckyGenerator,
     DummyGenerator,
     AttentionGenerator,
 )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+
+magic_prompts_enabled = True
+try:
+    from prompts.generators.magicprompt import MagicPromptGenerator
+except Exception as e:
+    magic_prompts_enabled = False
+    logger.warning(f"Could not load magic prompt generator: {e}")
 
 from prompts.generators.jinjagenerator import JinjaGenerator
 from prompts.generators.promptgenerator import GeneratorException
@@ -32,8 +42,6 @@ from prompts import prompt_writer
 from ui import wildcards_tab
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 is_debug = getattr(opts, "is_debug", False)
 if is_debug:
@@ -163,7 +171,7 @@ class Script(scripts.Script):
                 unlink_seed_from_prompt,
             )
 
-        if is_magic_prompt:
+        if magic_prompts_enabled and is_magic_prompt:
             generator = MagicPromptGenerator(
                 generator, magic_prompt_length, magic_temp_value, seed=original_seed
             )
@@ -191,6 +199,10 @@ class Script(scripts.Script):
         jinja_html_path = base_dir / "jinja_help.html"
         jinja_help = jinja_html_path.open().read()
 
+        is_magic_prompt = False
+        magic_prompt_length = 100
+        magic_temp_value = 0.7
+
         with gr.Group(elem_id="dynamic-prompting"):
             with gr.Accordion("Dynamic Prompts", open=False):
                 is_enabled = gr.Checkbox(
@@ -217,7 +229,7 @@ class Script(scripts.Script):
                 with gr.Box():
                     with gr.Group():
                         is_magic_prompt = gr.Checkbox(
-                            label="Magic prompt", value=False, elem_id="is-magicprompt"
+                            label="Magic prompt", value=False, elem_id="is-magicprompt", visible=magic_prompts_enabled
                         )
                         magic_prompt_length = gr.Slider(
                             label="Max magic prompt length",
@@ -225,6 +237,7 @@ class Script(scripts.Script):
                             minimum=30,
                             maximum=300,
                             step=10,
+                            visible=magic_prompts_enabled
                         )
                         magic_temp_value = gr.Slider(
                             label="Magic prompt creativity",
@@ -232,6 +245,7 @@ class Script(scripts.Script):
                             minimum=0.1,
                             maximum=3.0,
                             step=0.10,
+                            visible=magic_prompts_enabled
                         )
 
                     is_feeling_lucky = gr.Checkbox(

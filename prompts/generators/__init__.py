@@ -9,6 +9,6 @@ from .batched_combinatorial import BatchedCombinatorialPromptGenerator
 from .combinatorial import CombinatorialPromptGenerator
 from .dummygenerator import DummyGenerator
 from .feelinglucky import FeelingLuckyGenerator
-from .magicprompt import MagicPromptGenerator
+# from .magicprompt import MagicPromptGenerator
 from .randomprompt import RandomPromptGenerator
 from .attentiongenerator import AttentionGenerator
