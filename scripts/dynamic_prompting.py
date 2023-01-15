@@ -1,6 +1,4 @@
 from __future__ import annotations
-import sys
-print(sys.executable)
 import logging
 from string import Template
 from pathlib import Path
@@ -13,18 +11,12 @@ from modules.processing import process_images, fix_seed, Processed
 from modules.shared import opts, OptionInfo
 from modules.devices import get_optimal_device
 
-from ui import settings
-
 from dynamicprompts.wildcardmanager import WildcardManager
-from prompts.uicreation import UiCreation
-
-
 from dynamicprompts.generators.promptgenerator import GeneratorException
-from prompts.utils import slugify, get_unique_path
-from prompts import prompt_writer
-from prompts.generator_builder import GeneratorBuilder
 
-from ui import wildcards_tab, save_params
+from prompts.generator_builder import GeneratorBuilder
+from prompts.uicreation import UiCreation
+from ui import wildcards_tab, save_params, settings
 
 VERSION = "2.3.5"
 
@@ -355,21 +347,11 @@ class Script(scripts.Script):
             f"Prompt matrix will create {updated_count} images in a total of {p.n_iter} batches."
         )
 
-        try:
-
-            if write_prompts:
-                prompt_filename = get_unique_path(
-                    Path(p.outpath_samples), slugify(original_prompt), suffix="csv"
-                )
-                prompt_writer.write_prompts(
-                    prompt_filename,
-                    original_prompt,
-                    original_negative_prompt,
-                    all_prompts,
-                    all_negative_prompts,
-                )
-        except Exception as e:
-            logger.error(f"Failed to write prompts to file: {e}")
+        save_params.prompt_details.write_prompts = write_prompts
+        save_params.prompt_details.original_prompt = original_prompt
+        save_params.prompt_details.original_negative_prompt = original_negative_prompt
+        save_params.prompt_details.all_prompts = all_prompts
+        save_params.prompt_details.all_negative_prompts = all_negative_prompts
 
         p.all_prompts = all_prompts
         p.all_negative_prompts = all_negative_prompts
