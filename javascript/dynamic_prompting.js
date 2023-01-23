@@ -5,7 +5,7 @@ sddp_ui = null
 onUiUpdate(function () {
   if (!sddp_loaded) {
     gradioApp().getElementById("dynamic-prompts-enabled").append("Complete documentation is available at https://github.com/adieyal/sd-dynamic-prompts. Please report any issues on GitHub.")
-    gradioApp().getElementById("is-combinatorial").append("Generate all possible prompts up to a maximum of Batch count * Batch size)")
+    gradioApp().getElementById("is-combinatorial").append("Generate all possible prompt combinations.")
     gradioApp().getElementById("is-magicprompt").append("Automatically update your prompt with interesting modifiers. (Runs slowly the first time)")
     gradioApp().getElementById("is-feelinglucky").append("Generate random prompts from lexica.art (your prompt is used as a search query).")
     gradioApp().getElementById("is-fixed-seed").append("Use the same seed for all prompts in this batch")
@@ -15,6 +15,7 @@ onUiUpdate(function () {
     gradioApp().getElementById("no-image-generation").append("Disable image generation. Useful if you only want to generate text prompts. (1 image will still be generated to keep Auto1111 happy.).")
     gradioApp().getElementById("is-attention-grabber").append("Add emphasis to a randomly selected keyword in the prompt.")
     gradioApp().getElementById("write-raw-template").append("Write template into image metadata.")
+    gradioApp().getElementById("magic-prompt-model").append("Note: Each model will download between 300mb and 1.4gb of data on first use.")
 
     sddp_ui = new SDDPUI()
     sddp_loaded = true;

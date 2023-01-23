@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 import logging
 from string import Template
 from pathlib import Path
@@ -18,7 +19,7 @@ from prompts.generator_builder import GeneratorBuilder
 from prompts.uicreation import UiCreation
 from ui import wildcards_tab, save_params, settings
 
-VERSION = "2.3.5"
+VERSION = "2.4.1"
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -71,6 +72,23 @@ save_params.initialize()
 settings.initialize()
 
 device = 0 if get_optimal_device() == "cuda" else -1
+
+MAGIC_PROMPT_MODELS = [
+    "Gustavosta/MagicPrompt-Stable-Diffusion",
+    "daspartho/prompt-extend",
+    "succinctly/text2image-prompt-generator",
+    "microsoft/Promptist",
+    "AUTOMATIC/promptgen-lexart", 
+    "AUTOMATIC/promptgen-majinai-safe", 
+    "AUTOMATIC/promptgen-majinai-unsafe",
+    "kmewhort/stable-diffusion-prompt-bolster",
+    "Gustavosta/MagicPrompt-Dalle",
+    "Ar4ikov/gpt2-650k-stable-diffusion-prompt-generator",
+    "Ar4ikov/gpt2-medium-650k-stable-diffusion-prompt-generator",
+    "crumb/bloom-560m-RLHF-SD2-prompter-aesthetic",
+    "Meli/GPT2-Prompt",
+    "DrishtiSharma/StableDiffusion-Prompt-Generator-GPT-Neo-125M"
+]
 
 
 def generate_prompts(
@@ -129,6 +147,16 @@ class Script(scripts.Script):
                         value=False,
                         elem_id="is-combinatorial",
                     )
+
+                    max_generations = gr.Slider(
+                        label="Max generations (0 = all combinations - the batch count value is ignored)",
+                        minimum=0,
+                        maximum=1000,
+                        step=1,
+                        value=0,
+                        elem_id="max-generations",
+                    )
+
                     combinatorial_batches = gr.Slider(
                         label="Combinatorial batches",
                         minimum=1,
@@ -143,6 +171,7 @@ class Script(scripts.Script):
                         is_magic_prompt = gr.Checkbox(
                             label="Magic prompt", value=False, elem_id="is-magicprompt"
                         )
+
                         magic_prompt_length = gr.Slider(
                             label="Max magic prompt length",
                             value=100,
@@ -150,12 +179,21 @@ class Script(scripts.Script):
                             maximum=300,
                             step=10,
                         )
+
                         magic_temp_value = gr.Slider(
                             label="Magic prompt creativity",
                             value=0.7,
                             minimum=0.1,
                             maximum=3.0,
                             step=0.10,
+                        )
+
+                        magic_model = gr.Dropdown(
+                            MAGIC_PROMPT_MODELS,
+                            value=MAGIC_PROMPT_MODELS[0], 
+                            multiselect=False,
+                            label="Magic prompt model",
+                            elem_id="magic-prompt-model",
                         )
 
                     is_feeling_lucky = gr.Checkbox(
@@ -260,6 +298,8 @@ class Script(scripts.Script):
             disable_negative_prompt,
             enable_jinja_templates,
             no_image_generation,
+            max_generations,
+            magic_model,
         ]
 
     def process(
@@ -280,6 +320,8 @@ class Script(scripts.Script):
         disable_negative_prompt,
         enable_jinja_templates,
         no_image_generation,
+        max_generations,
+        magic_model
     ):
 
         if not is_enabled:
@@ -296,6 +338,13 @@ class Script(scripts.Script):
         original_prompt, original_negative_prompt = get_prompts(p)
         original_seed = p.seed
         num_images = p.n_iter * p.batch_size
+
+        if is_combinatorial:
+            if max_generations == 0:
+                num_images = None
+            else:
+                num_images = max_generations
+                
         combinatorial_batches = int(combinatorial_batches)
 
         try:
@@ -309,7 +358,7 @@ class Script(scripts.Script):
                 .set_is_jinja_template(enable_jinja_templates)
                 .set_is_combinatorial(is_combinatorial, combinatorial_batches)
                 .set_is_magic_prompt(
-                    is_magic_prompt, magic_prompt_length, magic_temp_value
+                    is_magic_prompt, magic_model, magic_prompt_length, magic_temp_value
                 )
                 .set_is_dummy(False)
                 .set_unlink_seed_from_prompt(unlink_seed_from_prompt)
